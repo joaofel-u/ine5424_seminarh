@@ -1,0 +1,77 @@
+% Ao menos uma linguagem (brazil ou english) deveria sempre ser fornecida
+\documentclass[brazil,nolapesd,aspectratio=169,noartschool]{lapesd-slides}
+
+\usepackage[stable]{footmisc}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{todonotes}
+\usepackage{babel}
+\usepackage[acronym]{glossaries}
+\usepackage{abntex2cite}
+\usepackage[useregional]{datetime2}
+
+\newcommand{\mydate}{\DTMdisplaydate{2020}{10}{28}{-1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Metadados
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title[Risc-V I/O]{Seminar H - I/O Operation}
+\author[Silva and Uller]{\large Guilherme Antonio Ferreira da Silva\\João Fellipe Uller}
+
+\institute{
+  \fontsize{10.5}{12.6}\selectfont 
+  Depto. de Informática e Estatística\\
+  Universidade Federal de Santa Catarina - Florianópolis\\
+  INE5424 - Sistemas Operacionais II\\
+}
+
+\date{\mydate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Slides
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\titleframe
+
+% Você não é obrigado a colocar um sumário!
+\begin{frame}{Sumário}
+  \tableofcontents
+\end{frame}
+
+% Desse ponto em diante serão inseridos slides de pausa a cada \section
+\hidesections
+
+\section{Introdução}
+
+
+\section{Opções da classe}
+
+
+\section{Novos comandos e Ambientes}
+
+
+\section{Exemplos}
+
+\begin{frame}{Figuras}
+  \addfiglw[Art school building (Chair, 2019)]{\jobname-ufsc.jpg}
+  
+  \begin{itemize}
+    \item Figura inclusa com \mt|\addfiglw|
+  \end{itemize}
+\end{frame}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Finalização
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\thanksframe
+
+\referencesframe{userguide}
+
+\end{document}
