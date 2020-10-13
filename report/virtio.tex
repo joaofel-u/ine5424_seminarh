@@ -1,8 +1,6 @@
-\graphicspath{ {./assets/} }
+\graphicspath{ {../img/} }
 
 \section*{VirtIO}
-
-\subsection{Introdução}
 
 O VirtIO é um protocolo de comunicação entre dispositivos virtuais, criado com o objetivo de definir uma API para unificar drivers e facilitar o uso e configuração desses dispositivos, 
 visto que existem diversos sistemas de virtualização diferentes e cada um desses realiza a sua própria implementação.
@@ -19,7 +17,7 @@ Por fim, temos a Virtqueue, uma interface alocada na memória do guest (disposit
 
 \includegraphics{virtio-arch.png}
 
-\subsection{Estrutura da Virtqueue}
+\subsection*{Estrutura da Virtqueue}
 
 A Virtqueue é implementada usando uma estrutura chamada \emph{Vring}, que consiste basicamente de 3 (três) partes: um array de descriptors, onde são inseridos os dados,
 um \emph{available ring}, usado para a comunicação do sistema operacional com o dispositivo e um \emph{used ring}, utilizado para a comunicação no sentido do dispositivo para o sistema operacional.
@@ -77,7 +75,7 @@ Dessa forma, se os índices não são iguais, significa que existe ainda dados a
 Por fim, para indicar onde procurar na memória pelos descriptors, os dispositivos do virtIO tem um registrador chamado \emph{QueuePFN (Page Field Number)} , que contém o endereço de memória física para o qual foi mapeado. Com esse componentes, conseguimos então realizar todo o ciclo de uma requisição. Iniciamos apontando para o endereço de memória existente em QueuePFN e então, quando um descriptor for preenchido com dados, notificamos que uma requisição foi realizada através de um outro registrador, chamado \emph{QueueNotify}, escrevendo um valor qualquer no mesmo. O processo se inicia e quando o mesmo finalizar, uma interrupção externa será enviada pelo dispositivo, de forma que o sistema operacional precisa apenas verificar o used ring e obter os dados.
 
 
-\subsection{Exemplo de configuração e uso de um dispositivo}
+\subsection*{Exemplo de configuração e uso de um dispositivo}
 
 Para iniciar o processo de uso e configuração de um dispositivo, precisamos começar lendo todo o barramento e procurar pelo chamado \emph{Magic Value}, i.e, a string 'virt'.
 Neste exemplo, usando o QEMU, precisamos verificar todos os endereços entre 0x1000{\_}1000 e 0x1000{\_}8000, pois é onde os dispositivos virtios são alocados pelo QEMU.
@@ -123,19 +121,18 @@ for addr in (MMIO_VIRTIO_START..=MMIO_VIRTIO_END).step_by(MMIO_VIRTIO_STRIDE) {
 }
 \end{lstlisting}
 
-Feito isso, começar a configurar o dispositivo e sua comunicação com o sistema operacional. Iniciamos essa configuração setando o bit de \textbf{ACKNOWLEDGE} no device status, seguido do bit de \textbf{DRIVER}.
+Feito isso, começamos a configurar o dispositivo e sua comunicação com o sistema operacional. Iniciamos essa configuração setando o bit de \textbf{ACKNOWLEDGE} no device status, seguido do bit de \textbf{DRIVER}.
 Além disso, precisamos entrar em acordo com o dispositivo sobre quais features serão habilitadas, através da leitura do registrador \emph{guest{\_}features} e então setando o bit de \textbf{FEATURES{\_}OK}. 
 Por fim, setamos o bit de \textbf{DRIVER{\_}OK} e agora o dispositivo está conectado.
 
-
-O virtIO define uma série de protocos para cada tipo de dispositivo quando vamos fazer uma requisição, então precisamos seguir o protocolo para dispositivos do tipo block.
+O VirtIO define uma série de protocolos para cada tipo de dispositivo quando vamos fazer uma requisição, então precisamos seguir o definido para dispositivos do tipo block.
 Sendo assim, usaremos 3 (três) descriptors nesse processo: uma para o header, buffer e status.
 O do header é responsável por dizer para o dispositivo se o sistema operacional quer escrever ou ler e o endereço onde essa ação deve ocorrer.
 O buffer, se for de leitura, irá escrever seu valor na memória, caso seja escrita, o dispositivo irá ler o endereço na memória.
 Por fim, o status field guarda o resultado da requisição, que pode ter 3 (três) valores: 0 - success, 1 - failure ou 2 - unsupported operation.
 
 
-Para realizar a requisição, pegamos os três descriptors que precisamos, inserimos os dados de header, buffer e status e então escrevemos o valor 0 dentro do registrador queue{\_}notify para avisar ao dispositivo que deve iniciar a trabalhar na requisição.
+Para realizar a requisição, pegamos os três descriptors que precisamos, inserimos os dados de header, buffer e status e então escrevemos o valor 0 dentro do registrador queue{\_}notify para avisar ao dispositivo que ele deve iniciar a trabalhar na requisição.
 Ao finalizar a execução, o dispositivo então emite uma interrupção e recebemos de volta um used ring, o qual contém um id para identificar o descriptor usado. Isto se deve pois as requisições podem 
-acabar numa ordem diferente do que foram enviadas, o que faz com que não tenhamos garantia de que é o mesmo descriptors e é necessário checar isto.
-Por fim, validado o descriptor e recebida a resposta, é possível liberar a memória da heap que foi alocada no ínicio da requisição.
+acabar numa ordem diferente do que foram enviadas, o que faz com que não tenhamos garantia de que é o mesmo descriptor e torna necessário que isso seja checado.
+Por fim, validado o descriptor e recebida a resposta, é possível liberar a memória da heap que foi alocada no ínicio da requisição e finalizar a mesma.
