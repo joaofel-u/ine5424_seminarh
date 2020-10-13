@@ -155,7 +155,3 @@ Para realizar a requisição, pegamos os três descriptors que precisamos, inser
 Ao finalizar a execução, o dispositivo então emite uma interrupção e recebemos de volta um used ring, o qual contém um id para identificar o descriptor usado. Isto se deve pois as requisições podem 
 acabar numa ordem diferente do que foram enviadas, o que faz com que não tenhamos garantia de que é o mesmo descriptor e torna necessário que isso seja checado.
 Por fim, validado o descriptor e recebida a resposta, é possível liberar a memória da heap que foi alocada no ínicio da requisição e finalizar a mesma.
-
-\begin{lstlisting}[language=C]
-  
-\end{lstlisting}
