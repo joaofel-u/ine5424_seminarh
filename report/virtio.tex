@@ -123,7 +123,26 @@ for addr in (MMIO_VIRTIO_START..=MMIO_VIRTIO_END).step_by(MMIO_VIRTIO_STRIDE) {
 
 Feito isso, começamos a configurar o dispositivo e sua comunicação com o sistema operacional. Iniciamos essa configuração setando o bit de \textbf{ACKNOWLEDGE} no device status, seguido do bit de \textbf{DRIVER}.
 Além disso, precisamos entrar em acordo com o dispositivo sobre quais features serão habilitadas, através da leitura do registrador \emph{guest{\_}features} e então setando o bit de \textbf{FEATURES{\_}OK}. 
-Por fim, setamos o bit de \textbf{DRIVER{\_}OK} e agora o dispositivo está conectado.
+Por fim, setamos o bit de \textbf{DRIVER{\_}OK} e agora o dispositivo está conectado. O trecho de código abaixo mostra como seria esse processo para um dispositivo genérico.
+
+\begin{lstlisting}[language=C]
+  // Reseta o dispositivo e pega o status bit
+  ptr.add(MmioOffsets::Status.scale32()).write_volatile(0); 
+  let mut status_bits = StatusField::Acknowledge.val32();
+
+  // Seta o ACKNOWLEDGE e o DRIVER no status bit
+  ptr.add(MmioOffsets::Status.scale32()).write_volatile(status_bits);
+  status_bits |= StatusField::DriverOk.val32();
+  ptr.add(MmioOffsets::Status.scale32()).write_volatile(status_bits);
+
+  // Seta o FEATURES{\_}OK no status bit
+  status_bits |= StatusField::FeaturesOk.val32();
+  ptr.add(MmioOffsets::Status.scale32()).write_volatile(status_bits);
+
+  // Seta o DRIVER{\_}OK no status bit e o dispositivo está conectado
+  status_bits |= StatusField::DriverOk.val32();
+  ptr.add(MmioOffsets::Status.scale32()).write_volatile(status_bits);
+\end{lstlisting}
 
 O VirtIO define uma série de protocolos para cada tipo de dispositivo quando vamos fazer uma requisição, então precisamos seguir o definido para dispositivos do tipo block.
 Sendo assim, usaremos 3 (três) descriptors nesse processo: uma para o header, buffer e status.
@@ -136,3 +155,7 @@ Para realizar a requisição, pegamos os três descriptors que precisamos, inser
 Ao finalizar a execução, o dispositivo então emite uma interrupção e recebemos de volta um used ring, o qual contém um id para identificar o descriptor usado. Isto se deve pois as requisições podem 
 acabar numa ordem diferente do que foram enviadas, o que faz com que não tenhamos garantia de que é o mesmo descriptor e torna necessário que isso seja checado.
 Por fim, validado o descriptor e recebida a resposta, é possível liberar a memória da heap que foi alocada no ínicio da requisição e finalizar a mesma.
+
+\begin{lstlisting}[language=C]
+  
+\end{lstlisting}
