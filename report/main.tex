@@ -42,6 +42,9 @@
 \input{acronyms.tex}
 \makeglossaries
 
+% References
+\usepackage{cite}
+
 \usepackage[useregional]{datetime2}
 
 \newcommand{\mydate}{\DTMdisplaydate{2020}{10}{14}{-1}}
@@ -76,8 +79,12 @@
 	{\Large{Florianópolis, \mydate}}
 \end{titlepage}
 
-\input{body.tex}               % 0.5 p
+\input{body.tex}
+\input{virtio.tex}
 
-\bibliography{references.bib}
+\nocite{RISCVUserISA}  % Forces reference
+
+\bibliographystyle{plain}
+\bibliography{references.bib}{}
 
 \end{document}

@@ -1,8 +1,6 @@
-\graphicspath{ {./assets/} }
+\graphicspath{ {../img/} }
 
 \section*{VirtIO}
-
-\subsection{Introdução}
 
 O VirtIO é um protocolo de comunicação entre dispositivos virtuais, criado com o objetivo de definir uma API para unificar drivers e facilitar o uso e configuração desses dispositivos, 
 visto que existem diversos sistemas de virtualização diferentes e cada um desses realiza a sua própria implementação.
@@ -19,7 +17,7 @@ Por fim, temos a Virtqueue, uma interface alocada na memória do guest (disposit
 
 \includegraphics{virtio-arch.png}
 
-\subsection{Estrutura da Virtqueue}
+\subsection*{Estrutura da Virtqueue}
 
 A Virtqueue é implementada usando uma estrutura chamada \emph{Vring}, que consiste basicamente de 3 (três) partes: um array de descriptors, onde são inseridos os dados,
 um \emph{available ring}, usado para a comunicação do sistema operacional com o dispositivo e um \emph{used ring}, utilizado para a comunicação no sentido do dispositivo para o sistema operacional.
@@ -77,4 +75,4 @@ Dessa forma, se os índices não são iguais, significa que existe ainda dados a
 Por fim, para indicar onde procurar na memória pelos descriptors, os dispositivos do virtIO tem um registrador chamado \emph{QueuePFN (Page Field Number)} , que contém o endereço de memória física para o qual foi mapeado. Com esse componentes, conseguimos então realizar todo o ciclo de uma requisição. Iniciamos apontando para o endereço de memória existente em QueuePFN e então, quando um descriptor for preenchido com dados, notificamos que uma requisição foi realizada através de um outro registrador, chamado \emph{QueueNotify}, escrevendo um valor qualquer no mesmo. O processo se inicia e quando o mesmo finalizar, uma interrupção externa será enviada pelo dispositivo, de forma que o sistema operacional precisa apenas verificar o used ring e obter os dados.
 
 
-\subsection{Exemplo de configuração e uso de um dispositivo}
+\subsection*{Exemplo de configuração e uso de um dispositivo}
