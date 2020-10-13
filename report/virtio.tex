@@ -15,7 +15,11 @@ Já o \emph{feature bits field} é utilizado para comunicar sobre quais features
 
 Por fim, temos a Virtqueue, uma interface alocada na memória do guest (dispositivo) e que realiza a comunicação entre dois grupos: front-end, onde os pedidos de I/O do processo usuário são realizados e então transferidos para o back-end, que os recebe e então executa as operações utilizando os dispositivos físicos. 
 
-\includegraphics{virtio-arch.png}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{virtio-arch.png}
+  \caption{VirtIO Architecture.}
+\end{figure}
 
 \subsection*{Estrutura da Virtqueue}
 
