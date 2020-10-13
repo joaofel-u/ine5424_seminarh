@@ -78,3 +78,64 @@ Por fim, para indicar onde procurar na memória pelos descriptors, os dispositiv
 
 
 \subsection{Exemplo de configuração e uso de um dispositivo}
+
+Para iniciar o processo de uso e configuração de um dispositivo, precisamos começar lendo todo o barramento e procurar pelo chamado \emph{Magic Value}, i.e, a string 'virt'.
+Neste exemplo, usando o QEMU, precisamos verificar todos os endereços entre 0x1000{\_}1000 e 0x1000{\_}8000, pois é onde os dispositivos virtios são alocados pelo QEMU.
+Encontrado esse valor, podemos ler então o valor do registrador \emph{DeviceID}, que identifica o tipo de dispositivo. Nesse caso, procuramos pelo valor 2, para \emph{block devices}.
+O trecho de código abaixo mostra um pedaço dessa leitura de endereços até encontrarmos o dispositivo desejado.
+
+\begin{lstlisting}[language=C]
+for addr in (MMIO_VIRTIO_START..=MMIO_VIRTIO_END).step_by(MMIO_VIRTIO_STRIDE) {
+  let magicvalue;
+  let device_id;
+  let ptr = addr as *mut u32;
+
+  unsafe {
+    magicvalue = ptr.read_volatile();
+    deviceid = ptr.add(2).read_volatile();
+  }
+
+  if MMIO_VIRTIO_MAGIC != magicvalue {
+    continue;
+  }
+  else if 0 == deviceid {
+    println!("not connected.");
+  }
+  else {
+    match deviceid {
+      2 => {
+        if false == setup_block_device(ptr) {
+          println!("setup failed.");
+        }
+        else {
+          let idx = (addr - MMIO_VIRTIO_START) >> 12;
+          unsafe {
+            VIRTIO_DEVICES[idx] =
+              Some(VirtioDevice::new_with(DeviceTypes::Block));
+          }
+
+          println!("setup succeeded!");
+        }
+      },
+      _ => println!("unknown device type."),
+    }
+  }
+}
+\end{lstlisting}
+
+Feito isso, começar a configurar o dispositivo e sua comunicação com o sistema operacional. Iniciamos essa configuração setando o bit de \textbf{ACKNOWLEDGE} no device status, seguido do bit de \textbf{DRIVER}.
+Além disso, precisamos entrar em acordo com o dispositivo sobre quais features serão habilitadas, através da leitura do registrador \emph{guest{\_}features} e então setando o bit de \textbf{FEATURES{\_}OK}. 
+Por fim, setamos o bit de \textbf{DRIVER{\_}OK} e agora o dispositivo está conectado.
+
+
+O virtIO define uma série de protocos para cada tipo de dispositivo quando vamos fazer uma requisição, então precisamos seguir o protocolo para dispositivos do tipo block.
+Sendo assim, usaremos 3 (três) descriptors nesse processo: uma para o header, buffer e status.
+O do header é responsável por dizer para o dispositivo se o sistema operacional quer escrever ou ler e o endereço onde essa ação deve ocorrer.
+O buffer, se for de leitura, irá escrever seu valor na memória, caso seja escrita, o dispositivo irá ler o endereço na memória.
+Por fim, o status field guarda o resultado da requisição, que pode ter 3 (três) valores: 0 - success, 1 - failure ou 2 - unsupported operation.
+
+
+Para realizar a requisição, pegamos os três descriptors que precisamos, inserimos os dados de header, buffer e status e então escrevemos o valor 0 dentro do registrador queue{\_}notify para avisar ao dispositivo que deve iniciar a trabalhar na requisição.
+Ao finalizar a execução, o dispositivo então emite uma interrupção e recebemos de volta um used ring, o qual contém um id para identificar o descriptor usado. Isto se deve pois as requisições podem 
+acabar numa ordem diferente do que foram enviadas, o que faz com que não tenhamos garantia de que é o mesmo descriptors e é necessário checar isto.
+Por fim, validado o descriptor e recebida a resposta, é possível liberar a memória da heap que foi alocada no ínicio da requisição.
