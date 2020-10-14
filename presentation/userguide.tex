@@ -47,29 +47,131 @@
 \end{frame}
 
 % Desse ponto em diante serão inseridos slides de pausa a cada \section
-\hidesections
+\showsections
 
-\section{Introdução}
+\section{RISC-V I/O}
 
 	\begin{frame}{RISC-V I/O}
+		\textit{Memory Mapped I/O}
 		\begin{itemize}
-			\item \textit{Memory Mapped I/O}
-			\begin{itemize}
-				\item Mesmo espaço de endereçamento para endereçar memória e I/O
-				\item Utiliza as instruções regulares de acesso à memória
-			\end{itemize}
+			\item Mesmo espaço de endereçamento para endereçar memória e I/O
+			\item Utiliza as instruções regulares de acesso à memória
+		\end{itemize}
 
+		\vspace{1em}
+
+		Vantagens:
+		\begin{itemize}
 			\item ISA simplificada
 			\item CPU menor
+			\item Maior proteção
+		\end{itemize}
+	\end{frame}
+
+
+	\subsection{MMIO}
+
+	%
+	\begin{frame}{\textit{Memory Mapped I/O}}
+		Dispositivos de I/O mapeados dentro do espaço de endereçamento do sistema
+		\begin{itemize}
+			\item Monitoram o barramento de endereço da CPU esperando requisições
+		\end{itemize}
+
+		\addfig[][width=0.35\linewidth]{mmio_layout.png}
+	\end{frame}
+
+
+	\subsection{Mapeamento no QEMU}
+
+	%
+	\begin{frame}{Mapeamento no QEMU}
+		\begin{itemize}
+			\item Mapeamento fica a cargo do ambiente de execução
+			\begin{itemize}
+				\item Normalmente realizado durante o boot
+			\end{itemize}
+
+			\vspace{0.5em}
+			\item Mapeamento dos registradores de \textit{hardware} dos dispositivos
+				para dentro do espaço de endereçamento
 		\end{itemize}
 	\end{frame}
 
 	%
-	\begin{frame}{\textit{Memory Mapped I/O}}
+	\begin{frame}{Mapeamento no QEMU}
 		\begin{itemize}
+			\item VirtIO
+			\item Endereço 0x10001000 até 0x10008000
+		\end{itemize}
+		\addfig[][width=0.85\linewidth]{qemu_map.png}
+	\end{frame}
 
+
+	\subsection{Acesso}
+
+	%
+	\begin{frame}{Acesso às regiões de I/O}
+		\begin{itemize}
+			\item \textit{Uncached} load/stores
+			\begin{itemize}
+				\item Dados buscados diretamente dos controladores dos dispositivos
+			\end{itemize}
+
+			\vspace{0.5em}
+			\item Regiões inacessíveis diretamente para \textit{threads} do espaço de usuário
 		\end{itemize}
 	\end{frame}
+
+
+	\subsection{Ordenamento}
+
+	%
+	\begin{frame}{Ordenamento de operações}
+		Modelo de memória relaxado
+		\begin{itemize}
+			\item Sem garantia de ordem entre threads
+		\end{itemize}
+
+		\vspace{1em}
+
+		Soluções para obter ordenamento rígido:
+		\begin{itemize}
+			\item \textit{Channels}
+			\item FENCE
+		\end{itemize}
+	\end{frame}
+
+	%
+	\begin{frame}{Channels}
+		\begin{itemize}
+			\item Mecanismo que possibilita ordenamento entre diferentes regiões
+			\item Identificador numérico
+			\begin{itemize}
+				\item Canal 0: ordenamento ponto-a-ponto entre a \textit{thread} e a região específicada
+				\item Canal 1: ordenamento global entre todas as regiões de I/O
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+
+	%
+	\begin{frame}{FENCE}
+		\addfig[][width=\linewidth]{fence_spec.png}
+
+		Garante que as operações do grupo \textit{predecessor} serão vistas antes de qualquer operação
+		do grupo \textit{sucessor} à instrução FENCE
+
+		\vspace{1em}
+
+		\begin{itemize}
+			\item Ordenamento entre qualquer combinação de operações:
+			\begin{itemize}
+				\item Acessos à memória: R e W
+				\item Entrada e saída: I e O
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+
 
 \section{VirtIO}
 
@@ -202,6 +304,7 @@
 	Ao finalizar a execução, o dispositivo emite uma interrupção e recebemos de volta um used ring,
 	contendo o id do descriptor usado, já que as operações podem terminar em ordem diferente do que
 	foram enviadas. Por fim, validado o descriptor e recebida a resposta, liberamos a memória alocada.
+
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -209,6 +312,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \thanksframe
+
+\nocite{RISCVUserISA}
+\nocite{virtioPaper}
+\nocite{virtioManual}
 
 \referencesframe{userguide}
 
