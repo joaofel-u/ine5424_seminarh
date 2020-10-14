@@ -105,7 +105,7 @@
 		apenas entre uma \textit{thread} e a região especificada, enquanto o canal 1 é usado para prover
 		ordenamento global entre todas as regiões de I/O. No entanto, para se ter um controle mais
 		fino de quais acessos têm que preceder, sem a necessidade de um ordenamento total, tem-se
-		a instrução FENCE, que garante que nenhuma operação do grupo predecessor seja vista
+		a instrução FENCE, que garante que todas as operações do grupo predecessor sejam vistas
 		pelos observadores antes do grupo de operações sucessoras à instrução FENCE.
 
 		\begin{figure}[t]
