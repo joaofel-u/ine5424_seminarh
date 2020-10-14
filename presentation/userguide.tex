@@ -66,6 +66,125 @@
 \end{frame}
 
 
+\begin{frame}{VirtIO}
+É um protocolo de comunicação entre dispositivos virtuais, focado em três objetivos:
+
+\begin{itemize}
+  \item Definir uma API para a comunição de dispositivos
+  \item Unificar drivers
+  \item Facilitar o uso e configuração de dispositivos em todos os sistemas de virtualização existentes
+\end{itemize}
+
+
+Para utilizar esse protocolo, precisamos de três componentes:
+\begin{itemize}
+  \item Device status field
+  \item Feature field
+  \item Virtqueue
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Device status field}
+É uma sequência de bits utilizada pelo dispositivo em conjunto com o sistema operacional para iniciar a comunicação entre estes.
+
+
+\begin{itemize}
+  \item ACKNOWLEDGE - Dispositivo reconhecido.
+  \item DRIVER - Inicialização.
+  \item DRIVER{\_}OK - Sinaliza que a comunicação está pronta para começar.
+  \item FEATURES{\_}OK - Acordo sobre quais features serão usadas finalizado.
+  \item DEVICE{\_}NEEDS{\_}RESET - Falha fatal do lado do dispositivo.
+  \item FAILED - Falha fatal do lado do sistema operacional.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Feature field}
+Já o feature field é utilizado entre o sistema operacional e o dispositivo para saber quais features estão disponíveis e quais serão utilizadas.
+
+Para realizar essa negociação, são utilizados dois registradores:
+\begin{itemize}
+  \item guest{\_}feature
+  \item host{\_}feature
+\end{itemize}
+
+
+Quando essa negociação é finalizada, usamos o device status field e setamos o bit de FEATURES{\_}OK.
+\end{frame}
+
+\begin{frame}{Virtqueue}
+A interface alocada na memória do dispositivo que faz o transporte entre dois grupos:
+
+\begin{itemize}
+  \item Front-end - Realizadas as requisições e enviadas para o back-end.
+  \item Back-end - Recebe as requisições e executa-as
+\end{itemize}
+
+% TODO: Adicionar imagem da arquiteura aqui.
+
+\end{frame}
+
+\begin{frame}{Vring}
+Estrutura que implementa de fato a Virtqueue, divididade em três componentes:
+
+\begin{itemize}
+  \item Array de descriptors
+  \item Available Ring
+  \item Used Ring
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Descriptors}
+  Aqui são inseridos os dados que serão lidos/escritos eventualmente.
+
+  São formados por campo contendo seu tamanho e um endereço de 64 bits, um campo next que aponta
+  para o próximo descriptor, se existir e um campo de flag.
+
+  \begin{itemize}
+    \item VIRTQ{\_}DESC{\_}F{\_}WRITE - Indica se está no modo leitura ou escrita.
+    \item VIRTQ{\_}DESC{\_}F{\_}NEXT - Indica se existe um encadeamento de buffers.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Available ring e Used Ring}
+  Após a preencher o descriptor, colocamos ele dentro de um Available ring. Ele e o used ring são utilizados
+  para trocar as informações entre sistema operacional e dispositivo.Ambos possuem um campo de flag para desabilitar interrupções, além de seu indice.
+
+
+  Tanto o sistema operacional quanto o dispositivo acompanham o estado desses dois anéis, para garantir que estejam falando sobre a mesma requisição.
+\end{frame}
+
+\begin{frame}{Ciclo de uma requisição}
+  Inicialmente, precisamos iniciar a comunicação e verificar o tipo de dispositivo, já que o VirtIO define protocolos específicos para cada tipo de dispositivo.
+
+
+  \begin{enumerate}
+    \item Setar os bits necessários dentro do device status field.
+    \item Setar as features a serem utilizadas via feature field.
+    \item Varrer o barramento procurando pelo Magic Value, i.e, 'virt'
+    \item Ler o VendorID e identificar o tipo de dispositivo.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Ciclo de uma requisição}
+Encontrado o tipo de dispositivo, precisamos preencher os descriptors de acordo com seu tipo. No caso de um block device, por exemplo,
+precisariamos de três descriptors: um para o header, um para o buffer e um para o status.
+
+\begin{itemize}
+  \item header - Responsável por indicar se dispositivo vai ler ou escrever
+  \item buffer - Valor que será escrito na memória ou então endereço de memória a ser lido.
+  \item status - Guarda o resultado da requisição, que pode ser 0 - success, 1 - failure ou 2 - unsupported device.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ciclo de uma requisição}
+Preenchido os descriptors, escrevemos o valor 0 no registrador queue{\_}notify para avisar que a requisição deve ser iniciada,
+inserindo também os descriptors no available ring.
+
+
+Ao finalizar a execução, o dispositivo então emite uma interrupção e recebemos de volta um used ring, contendo o id do descriptor usado,
+já que as operações podem terminar em ordem diferente do que foram enviadas. Por fim, validado o descriptor e recebida a resposta, liberamos a memória alocada.
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Finalização
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
