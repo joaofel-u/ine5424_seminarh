@@ -9,8 +9,8 @@
 	\textit{Memory Mapped I/O} (MMIO), ou seja, o RISC-V se utiliza do mesmo espaço de endereçamento
 	para endereçar tanto memória quanto dispositivos de entrada e saída. Dessa forma, a
 	especificação da ISA não prevê nenhum tipo de instrução especial para controle ou manipulação
-	do barramento para realizar I/O, mas sim as mesmas instruções de utilizadas para acessar a
-	memória são aplicadas da mesma maneira para acessar endereços dentro do espaço de endereçamento
+	do barramento para realizar I/O, mas sim as mesmas instruções utilizadas para acessar a
+	memória são aplicadas para acessar endereços dentro do espaço de endereçamento
 	que se referem a dispositivos externos.
 
 	Esse princípio se apoia na ideia de se ter uma ISA que seja simples e que possua instruções
@@ -99,7 +99,7 @@
 		relaxado não garante nenhum ordenamento nos acessos a esses dispositivos, à exceção daqueles
 		impostos por instruções \texttt{FENCE}, enquanto uma região de I/O com ordenamento
 		rígido garante que todos os acessos feitos por uma \textit{thread} àquela região sejam observados
-		pelos outros observadores apenas na ordem programada. Assim, cada região de I/O com ordenamento
+		pelos outros observadores na ordem programada. Assim, cada região de I/O com ordenamento
 		rígido especifica um número de canal, que é um mecanismo que garante que ordenamento possa
 		ser provido entre diferentes regiões. Por exemplo, o canal 0 especifica ordenamento rígido
 		apenas entre uma \textit{thread} e a região especificada, enquanto o canal 1 é usado para prover
