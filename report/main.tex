@@ -1,0 +1,94 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Lachaise Assignment
+% LaTeX Template
+% Version 1.0 (26/6/2018)
+%
+% This template originates from:
+% http://www.LaTeXTemplates.com
+%
+% Authors:
+% Marion Lachaise & François Févotte
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{article}
+
+\input{structure.tex} % Include the file specifying the document structure and custom commands
+
+% Encoding and Language
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+
+% Images
+\usepackage{graphicx}
+\usepackage{subcaption}
+\graphicspath{{./img/}}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+
+% URLs
+\usepackage{url}
+
+% Acronyms
+\usepackage[acronym,nowarn]{glossaries}
+\glsdisablehyper
+\input{acronyms.tex}
+\makeglossaries
+
+% References
+\usepackage{cite}
+
+\usepackage[useregional]{datetime2}
+
+\newcommand{\mydate}{\DTMdisplaydate{2020}{10}{14}{-1}}
+
+%----------------------------------------------------------------------------------------
+%	ASSIGNMENT INFORMATION
+%----------------------------------------------------------------------------------------
+
+\title{\textbf{Seminar H: I/O Bus Operation}}
+
+\author{\large Guilherme Antônio Ferreira da Silva \and João Fellipe Uller}
+
+\date{Universidade Federal de Santa Catarina --- UFSC \\ Florianópolis, \mydate}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{titlepage}
+	\centering
+	{\Large{Universidade Federal de Santa Catarina -- UFSC\\
+			INE5424 - Sistemas Operacionais II\\
+			Prof. Antônio Augusto Fröhlich\\}}
+	\vspace{4cm}
+	{\scshape\huge\textbf{Seminário H:\\I/O Bus Operation\\}}
+	\vspace{3cm}
+	{\Large{Guilherme Antônio Ferreira da Silva\\João Fellipe Uller\\}}
+
+	\vfill
+
+% Bottom of the page
+	{\Large{Florianópolis, \mydate}}
+\end{titlepage}
+
+\input{body.tex}
+\input{virtio.tex}
+
+\nocite{RISCVUserISA}  % Forces reference
+\nocite{virtioPaper}
+\nocite{virtioManual}
+
+\newpage
+
+\bibliographystyle{plain}
+\bibliography{references.bib}{}
+
+\end{document}
