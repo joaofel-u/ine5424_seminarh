@@ -68,12 +68,12 @@
 		\end{itemize}
 	\end{frame}
 
-
 	\subsection{MMIO}
 
 	%
 	\begin{frame}{\textit{Memory Mapped I/O}}
-		Dispositivos de I/O mapeados dentro do espaço de endereçamento do sistema
+		Dispositivos são mapeados em endereços previamente reservados, dentro do
+		espaço de endereçamento do sistema
 		\begin{itemize}
 			\item Monitoram o barramento de endereço da CPU esperando requisições
 		\end{itemize}
@@ -81,30 +81,30 @@
 		\addfig[][width=0.35\linewidth]{mmio_layout.png}
 	\end{frame}
 
-
-	\subsection{Mapeamento no QEMU}
-
 	%
-	\begin{frame}{Mapeamento no QEMU}
+	\begin{frame}{Mapeamento}
 		\begin{itemize}
+			\item Mapeamento dos registradores de \textit{hardware} dos dispositivos
+				para dentro do espaço de endereçamento
+
+			\vspace{0.5em}
+
 			\item Mapeamento fica a cargo do ambiente de execução
 			\begin{itemize}
 				\item Normalmente realizado durante o boot
-			\end{itemize}
-
-			\vspace{0.5em}
-			\item Mapeamento dos registradores de \textit{hardware} dos dispositivos
-				para dentro do espaço de endereçamento
+				\item \textit{Physical Memory Attributes} (PMAs)
+			\end{itemize}			
 		\end{itemize}
 	\end{frame}
 
 	%
-	\begin{frame}{Mapeamento no QEMU}
+	\begin{frame}{PMAs}
+		Definem uma série de características a respeito de uma dada região de memória:
 		\begin{itemize}
-			\item VirtIO
-			\item Endereço 0x10001000 até 0x10008000
+			\item Tipo (memória, I/O, vazia)
+			\item Acessibilidade
+			\item Tipos de acesso
 		\end{itemize}
-		\addfig[][width=0.85\linewidth]{qemu_map.png}
 	\end{frame}
 
 
@@ -124,13 +124,25 @@
 	\end{frame}
 
 
+	\subsection{Mapeamento no QEMU}
+
+	%
+	\begin{frame}{Mapeamento no QEMU}
+		\begin{itemize}
+			\item VirtIO
+			\item Endereço 0x10001000 até 0x10008000
+		\end{itemize}
+		\addfig[][width=0.85\linewidth]{qemu_map.png}
+	\end{frame}
+
+
 	\subsection{Ordenamento}
 
 	%
 	\begin{frame}{Ordenamento de operações}
 		Modelo de memória relaxado
 		\begin{itemize}
-			\item Sem garantia de ordem entre threads
+			\item Sem garantia de ordem entre \textit{harts}
 		\end{itemize}
 
 		\vspace{1em}
@@ -145,11 +157,12 @@
 	%
 	\begin{frame}{Channels}
 		\begin{itemize}
-			\item Mecanismo que possibilita ordenamento entre diferentes regiões
-			\item Identificador numérico
+			\item PMA especial que possibilita ordenamento entre diferentes regiões de memória
+			\item Cada região de I/O com ordenamento rígido especifica um identificador numérico
+				que identifica o canal
 			\begin{itemize}
-				\item Canal 0: ordenamento ponto-a-ponto entre a \textit{thread} e a região específicada
-				\item Canal 1: ordenamento global entre todas as regiões de I/O
+				\item Channel 0: ordenamento ponto-a-ponto entre a \textit{hart} e a região especificada
+				\item Channel 1: ordenamento global entre todas as regiões de I/O
 			\end{itemize}
 		\end{itemize}
 	\end{frame}
@@ -176,12 +189,12 @@
 \section{VirtIO}
 
 \begin{frame}{VirtIO}
-	Protocolo de comunicação entre dispositivos virtuais, focado em três objetivos:
+	Protocolo de comunicação entre dispositivos virtuais, focado em:
 
 	\begin{itemize}
-		\item Definir uma API para a comunição de dispositivos
+		\item Definir uma API para a comunição com dispositivos
 		\item Unificar drivers
-		\item Facilitar o uso e configuração de dispositivos em todos os sistemas de virtualização existentes
+		\item Facilitar o uso e configuração desses dispositivos
 	\end{itemize}
 
 	Três componentes básicos:
@@ -193,8 +206,6 @@
 \end{frame}
 
 \begin{frame}{Device status field}
-	Sequência de bits utilizada pelo dispositivo em conjunto com o SO para iniciar a comunicação entre estes.
-
 	\begin{itemize}
 		\item ACKNOWLEDGE - Dispositivo reconhecido.
 		\item DRIVER - Inicialização.
@@ -206,19 +217,23 @@
 \end{frame}
 
 \begin{frame}{Feature field}
-	Utilizado entre o SO e o dispositivo para saber quais features estão disponíveis e quais serão utilizadas.
+   Utilizado entre o SO e o dispositivo para saber quais features estão disponíveis e quais serão utilizadas.
 
-	Para essa negociação são utilizados dois registradores:
-	\begin{itemize}
-		\item guest{\_}feature
-		\item host{\_}feature
-	\end{itemize}
+   \vspace{1em}
 
-	Quando a negociação é finalizada, usamos o device status field e setamos o bit de FEATURES{\_}OK.
+   Utilizado para manter compatibilidade entre diferentes implementações
+
+   \vspace{1em}
+
+   Para essa negociação são utilizados dois registradores:
+   \begin{itemize}
+       \item guest{\_}feature
+       \item host{\_}feature
+   \end{itemize}
 \end{frame}
 
 \begin{frame}{Virtqueue}
-	Interface na memória do dispositivo que faz o transporte entre dois grupos:
+	Interface utilizada para a comunicação entre o \textit{guest} e o \textit{host}:
 
 	\begin{itemize}
 		\item Front-end - Realiza as requisições e as envia para o back-end.
@@ -242,12 +257,7 @@
 \begin{frame}{Descriptors}
 	Local para inserção dos dados que serão lidos/escritos eventualmente.
 
-	\vspace{1em}
-
-	Formados por um campo contendo seu tamanho e um endereço de 64 bits, um campo next que aponta
-	para o próximo descriptor, se existir e um campo flag.
-
-	\vspace{1em}
+	\addfig[][width=0.4\linewidth]{virtio-desc.png}
 
 	\begin{itemize}
 		\item VIRTQ{\_}DESC{\_}F{\_}WRITE - Indica se está no modo leitura ou escrita.
@@ -255,15 +265,34 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Available ring e Used Ring}
-	Após preencher o descriptor, colocamos ele dentro de um Available ring. Ele e o used ring são
-	utilizados para trocar as informações entre o SO e o dispositivo. Ambos possuem um campo de
-	flag para desabilitar interrupções, além de seu indice.
+\begin{frame}{Available e Used Ring}
+	Os rings representam encadeamentos circulares de buffers (descriptors).
+
+	%\vspace{1em}
+
+	\begin{itemize}
+		\item Available Ring: SO -> Dispositivo
+		\item Used Ring: Dispositivo -> SO
+	\end{itemize}
 
 	\vspace{1em}
 
 	Tanto o SO quanto o dispositivo acompanham o estado desses dois aneis, para garantir que estejam
 	tratando a mesma requisição.
+\end{frame}
+
+\begin{frame}{Configurando um dispositivo}
+	\begin{enumerate}
+		\item Resetar o dispositivo escrevendo 0 no Device status field
+		\item Setar o bit ACKNOWLEDGE status bit no registrador de status.
+		\item Setar o bit DRIVER no registrador de status.
+		\item Ler as features do dispositivo do registrador host\_features.
+		\item Negociar as features que serão utilizadas e escrevê-las no registrador guest\_features.
+		\item Setar o bit de status FEATURES\_OK.
+		\item Reler o registrador de status para confirmar que o dispositivo aceitou as features propostas.
+		\item Realizar o setup específico do dispositivo.
+		\item Setar o bit de status DRIVER\_OK. Agora o dispositivo está ATIVO.
+	\end{enumerate}
 \end{frame}
 
 \begin{frame}{Ciclo de uma requisição}
@@ -273,37 +302,27 @@
 	\end{itemize}
 
 	\vspace{1em}
-
-	\begin{enumerate}
-		\item Setar os bits necessários dentro do device status field.
-		\item Setar as features a serem utilizadas via feature field.
-		\item Varrer o barramento procurando pelo Magic Value, i.e, 'virt'
-		\item Ler o VendorID e identificar o tipo de dispositivo.
-	\end{enumerate}
-\end{frame}
-
-\begin{frame}{Ciclo de uma requisição}
-	Descriptors devem ser preenchidos de acordo com seu tipo.
 	
+	Descriptors devem ser preenchidos de acordo com seu tipo.
+
 	\vspace{1em}
 
 	Para um \textit{Block device}, por exemplo, precisaria-se de três descriptors:
 	\begin{itemize}
 		\item header - Indica se o dispositivo vai ler ou escrever
-		\item buffer - Valor que será escrito na memória ou o endereço de memória a ser lido.
+		\item buffer - Valor que será escrito na memória ou o endereço a ser lido.
 		\item status - Guarda o resultado da requisição, que pode ser 0 - success, 1 - failure ou 2 - unsupported device.
 	\end{itemize}
 \end{frame}
 
 \begin{frame}{Ciclo de uma requisição}
-	Em seguida, escrevemos o valor 0 no registrador queue{\_}notify para avisar que a requisição deve ser
-	iniciada, inserindo os descriptors no available ring.
+	Em seguida, inserem-se os descriptors no Available Ring e escreve-se o valor 0 no registrador
+	queue{\_}notify para avisar que existe uma requisição a	ser iniciada.
 
 	\vspace{1em}
 
-	Ao finalizar a execução, o dispositivo emite uma interrupção e recebemos de volta um used ring,
-	contendo o id do descriptor usado, já que as operações podem terminar em ordem diferente do que
-	foram enviadas. Por fim, validado o descriptor e recebida a resposta, liberamos a memória alocada.
+	Ao finalizar a execução, o dispositivo emite uma interrupção e recebe-se um Used Ring,
+	contendo o id do descriptor usado e a resposta da requisição.
 
 \end{frame}
 
@@ -311,12 +330,13 @@
 % Finalização
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\referencesframe{userguide}
+
 \thanksframe
 
 \nocite{RISCVUserISA}
 \nocite{virtioPaper}
 \nocite{virtioManual}
-
-\referencesframe{userguide}
+\nocite{MarzOS}
 
 \end{document}
